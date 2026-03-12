@@ -1,4 +1,3 @@
-
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
@@ -6,32 +5,18 @@ export default async function handler(req, res) {
     const body = req.body || {};
     const { query, chips, tasteProfile, discover } = body;
 
-    // Build context string from taste profile
-    const profileContext = tasteProfile ? `
-User taste profile:
-- Top categories: ${tasteProfile.topCategories?.join(", ") || "unknown"}
-- Things they look for: ${tasteProfile.topTags?.join(", ") || "unknown"}
-- Products they liked: ${tasteProfile.likedProducts?.join(", ") || "none yet"}
-- Products they disliked: ${tasteProfile.dislikedProducts?.join(", ") || "none yet"}
-- Total scans: ${tasteProfile.scanCount || 0}
-` : "No taste profile yet — suggest interesting products across categories.";
-
-    const categoryContext = chips?.length > 0
-      ? `Focus on these categories: ${chips.join(", ")}.`
+    const cats = tasteProfile?.topCategories?.slice(0,3).join(", ") || "";
+    const tags = tasteProfile?.topTags?.slice(0,4).join(", ") || "";
+    const liked = tasteProfile?.likedProducts?.slice(0,2).join(", ") || "";
+    const profileContext = tasteProfile?.scanCount > 0
+      ? `User likes: ${cats}. Values: ${tags}.${liked ? ` Liked: ${liked}.` : ""}`
       : "";
+    const categoryContext = chips?.length > 0 ? `Categories: ${chips.slice(0,3).join(", ")}.` : "";
 
+    const stores = "Etsy, REI, Patagonia, Williams Sonoma, Uncommon Goods, MEC, Nordstrom, Sur La Table";
     const searchPrompt = discover
-      ? `You are a personal shopping curator. Based on this user's taste profile, discover 5-6 exciting products they would genuinely love but might not have found on their own. Prioritize unique, quality products from specialty stores like Etsy, REI, Patagonia, MEC, Williams Sonoma, Sur La Table, Indigo, Nordstrom, Uncommon Goods, and other quality retailers. Avoid generic Amazon basics.
-
-${profileContext}
-${categoryContext}
-
-Search for specific real products with real prices. Focus on discovery — things that are interesting, well-made, and match their taste.`
-      : `You are a personal shopping assistant. Search for products matching: "${query}". ${categoryContext}
-
-${profileContext}
-
-Find 5-6 specific real products from a variety of quality stores including Etsy, REI, Patagonia, MEC, Williams Sonoma, Sur La Table, Indigo, Nordstrom, Canadian Tire, Sport Chek, Uncommon Goods, and other relevant retailers. Avoid showing only Amazon results — prioritize interesting and specialty stores.`;
+      ? `Personal shopping curator. Find 5 exciting products the user would love from: ${stores}. ${profileContext} ${categoryContext} Real products, real prices, no Amazon basics.`
+      : `Shopping assistant. Find 5 products for: "${query}". ${categoryContext} ${profileContext} From: ${stores}. Vary the stores.`;
 
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
