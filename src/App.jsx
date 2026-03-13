@@ -66,11 +66,67 @@ function getRandomN(arr, n) {
   return shuffled.slice(0, n);
 }
 
-function getLocale() {
-  const lang = navigator.language || "en-CA";
+const WORLD_COUNTRIES = [
+  { code:"JP", name:"Japan",          flag:"🇯🇵", known:"Knives, stationery, ceramics", vibe:"Precise, minimal, beautiful" },
+  { code:"IT", name:"Italy",          flag:"🇮🇹", known:"Kitchen, leather, fashion",    vibe:"Crafted with passion" },
+  { code:"FR", name:"France",         flag:"🇫🇷", known:"Beauty, cookware, linen",      vibe:"Effortlessly refined" },
+  { code:"DE", name:"Germany",        flag:"🇩🇪", known:"Tools, engineering, outdoor",  vibe:"Built to last" },
+  { code:"GB", name:"United Kingdom", flag:"🇬🇧", known:"Wool, tea, heritage brands",   vibe:"Classic with character" },
+  { code:"SE", name:"Sweden",         flag:"🇸🇪", known:"Design, outdoor, homeware",    vibe:"Clean, functional, warm" },
+  { code:"DK", name:"Denmark",        flag:"🇩🇰", known:"Design, cycling, hygge",       vibe:"Cosy and considered" },
+  { code:"US", name:"United States",  flag:"🇺🇸", known:"Outdoor gear, denim, tech",    vibe:"Go big or go home" },
+  { code:"AU", name:"Australia",      flag:"🇦🇺", known:"Surf, skincare, outdoor",      vibe:"Laid-back and sun-worn" },
+  { code:"NZ", name:"New Zealand",    flag:"🇳🇿", known:"Wool, adventure gear, honey",  vibe:"Pure and rugged" },
+  { code:"KR", name:"South Korea",    flag:"🇰🇷", known:"Skincare, tech, stationery",   vibe:"Innovative and precise" },
+  { code:"PT", name:"Portugal",       flag:"🇵🇹", known:"Ceramics, cork, linen",        vibe:"Simple and soulful" },
+  { code:"MX", name:"Mexico",         flag:"🇲🇽", known:"Textiles, ceramics, spices",   vibe:"Vibrant and handmade" },
+  { code:"IN", name:"India",          flag:"🇮🇳", known:"Textiles, spices, jewelry",    vibe:"Rich, colourful, artisan" },
+];
+
+const WORLD_CURRENCY = {
+  JP:"JPY", IT:"EUR", FR:"EUR", DE:"EUR", GB:"GBP", SE:"SEK",
+  DK:"DKK", US:"USD", AU:"AUD", NZ:"NZD", KR:"KRW", PT:"EUR",
+  MX:"MXN", IN:"INR",
+};
+
+const WORLD_STORES = {
+  JP: "Muji, Tokyu Hands, Loft, Rakuten, Amazon Japan, Japanese Etsy sellers",
+  IT: "Etsy Italian sellers, La Rinascente, Artemest, Italian leather brands",
+  FR: "Le Creuset, Maison du Monde, French Etsy sellers, Merci Paris, BHV",
+  DE: "Manufactum, Globetrotter, German Etsy sellers, WMF, Zwilling",
+  GB: "John Lewis, Monocle Shop, Etsy UK, Lakeland, Wool and the Gang",
+  SE: "IKEA, Åhléns, Swedish Etsy sellers, Fjällräven, Granit",
+  DK: "Hay, Normann Copenhagen, Danish Etsy sellers, Aiaiai, Stelton",
+  US: "REI, Patagonia, Levi's, Filson, American Etsy sellers, Buck Mason",
+  AU: "Kathmandu, R.M. Williams, Australian Etsy sellers, Aesop, Country Road",
+  NZ: "Allbirds, Icebreaker, Macpac, New Zealand Etsy sellers, Swanndri",
+  KR: "Olive Young, Korean Etsy sellers, Musinsa, Innisfree, 10x10",
+  PT: "Bordallo Pinheiro, Portuguese Etsy sellers, Vista Alegre, Cork brands",
+  MX: "Mexican Etsy sellers, Fonart, local artisan brands",
+  IN: "Fabindia, Indian Etsy sellers, Good Earth, Anokhi",
+};
+
+const COUNTRIES = [
+  { code:"CA", name:"Canada",         currency:"CAD", flag:"🇨🇦" },
+  { code:"US", name:"United States",  currency:"USD", flag:"🇺🇸" },
+  { code:"GB", name:"United Kingdom", currency:"GBP", flag:"🇬🇧" },
+  { code:"AU", name:"Australia",      currency:"AUD", flag:"🇦🇺" },
+  { code:"NZ", name:"New Zealand",    currency:"NZD", flag:"🇳🇿" },
+  { code:"FR", name:"France",         currency:"EUR", flag:"🇫🇷" },
+  { code:"DE", name:"Germany",        currency:"EUR", flag:"🇩🇪" },
+  { code:"NL", name:"Netherlands",    currency:"EUR", flag:"🇳🇱" },
+  { code:"ES", name:"Spain",          currency:"EUR", flag:"🇪🇸" },
+  { code:"IT", name:"Italy",          currency:"EUR", flag:"🇮🇹" },
+  { code:"JP", name:"Japan",          currency:"JPY", flag:"🇯🇵" },
+  { code:"KR", name:"South Korea",    currency:"KRW", flag:"🇰🇷" },
+  { code:"SG", name:"Singapore",      currency:"SGD", flag:"🇸🇬" },
+  { code:"HK", name:"Hong Kong",      currency:"HKD", flag:"🇭🇰" },
+];
+
+function detectCountryCode() {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-  // Map timezone to country + currency
-  const map = {
+  const lang = navigator.language || "en-CA";
+  const tzMap = {
     "America/Toronto":"CA","America/Vancouver":"CA","America/Edmonton":"CA",
     "America/Winnipeg":"CA","America/Halifax":"CA","America/St_Johns":"CA",
     "America/New_York":"US","America/Chicago":"US","America/Denver":"US",
@@ -81,19 +137,11 @@ function getLocale() {
     "Pacific/Auckland":"NZ","Asia/Tokyo":"JP","Asia/Seoul":"KR",
     "Asia/Singapore":"SG","Asia/Hong_Kong":"HK",
   };
-  const currencyMap = {
-    "CA":"CAD","US":"USD","GB":"GBP","FR":"EUR","DE":"EUR","NL":"EUR",
-    "ES":"EUR","IT":"EUR","AU":"AUD","NZ":"NZD","JP":"JPY","KR":"KRW",
-    "SG":"SGD","HK":"HKD",
-  };
-  const countryCode = map[tz] || (lang.includes("-") ? lang.split("-")[1] : "CA");
-  const currency = currencyMap[countryCode] || "CAD";
-  const countryNames = {
-    "CA":"Canada","US":"United States","GB":"United Kingdom","FR":"France",
-    "DE":"Germany","AU":"Australia","NZ":"New Zealand","JP":"Japan",
-    "KR":"South Korea","SG":"Singapore","NL":"Netherlands","ES":"Spain","IT":"Italy",
-  };
-  return { countryCode, currency, country: countryNames[countryCode] || "Canada", tz };
+  return tzMap[tz] || (lang.includes("-") ? lang.split("-")[1].toUpperCase() : "CA");
+}
+
+function getLocaleByCode(code) {
+  return COUNTRIES.find(c => c.code === code) || COUNTRIES[0];
 }
 
 const styles = `
@@ -237,6 +285,51 @@ const styles = `
   }
   .taste-chip:hover { border-color: var(--gold-mid); color: var(--gold); }
   .taste-chip.active { background: var(--gold-light); border-color: var(--gold-mid); color: var(--gold); }
+
+  /* World tab */
+  .world-header { padding: 24px 20px 16px; }
+  .world-title { font-family:"Playfair Display",serif; font-size:24px; font-weight:700; color:var(--ink); margin-bottom:6px; }
+  .world-sub { font-size:13px; color:var(--muted); line-height:1.6; }
+  .world-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 16px 16px; }
+  .world-card {
+    border-radius:14px; border:1.5px solid var(--border);
+    background:var(--warm-white); padding:14px; cursor:pointer;
+    transition:all 0.15s; text-align:left;
+  }
+  .world-card:hover { border-color:var(--gold-mid); background:var(--gold-light); transform:translateY(-1px); }
+  .world-card.active { border-color:var(--gold); background:var(--gold-light); }
+  .world-card-flag { font-size:28px; margin-bottom:8px; }
+  .world-card-name { font-size:14px; font-weight:700; color:var(--ink); margin-bottom:3px; }
+  .world-card-known { font-size:11px; color:var(--muted); line-height:1.5; }
+  .world-card-vibe { font-size:11px; color:var(--gold); font-weight:600; margin-top:4px; font-style:italic; }
+  .world-surprise {
+    margin:0 16px 10px; padding:14px 16px; border-radius:14px;
+    border:1.5px dashed var(--gold-mid); background:var(--gold-light);
+    cursor:pointer; display:flex; align-items:center; gap:12px;
+    font-family:"DM Sans",sans-serif; transition:all 0.15s;
+  }
+  .world-surprise:hover { background:var(--cream); border-color:var(--gold); }
+  .world-results-header {
+    padding:16px 20px 8px; display:flex; align-items:center; gap:10px;
+  }
+  .world-back {
+    background:none; border:none; cursor:pointer; color:var(--muted);
+    font-size:13px; font-family:"DM Sans",sans-serif; padding:0;
+    display:flex; align-items:center; gap:4px;
+  }
+  .world-back:hover { color:var(--ink); }
+
+  .country-picker-list { display: flex; flex-direction: column; gap: 4px; max-height: 340px; overflow-y: auto; }
+  .country-option {
+    display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+    border-radius: 10px; border: none; background: none; cursor: pointer;
+    font-family: "DM Sans", sans-serif; width: 100%; transition: background 0.15s;
+  }
+  .country-option:hover { background: var(--cream); }
+  .country-option.active { background: var(--gold-light); }
+  .country-flag { font-size: 22px; }
+  .country-name { font-size: 14px; font-weight: 600; color: var(--ink); flex: 1; text-align: left; }
+  .country-currency { font-size: 12px; color: var(--muted); font-weight: 500; }
 
   .price-filter-row {
     display: flex; gap: 6px; padding: 10px 20px 0; overflow-x: auto; scrollbar-width: none;
@@ -713,6 +806,11 @@ export default function App() {
   const [searchPlaceholder] = useState(() => getRandom(SEARCH_EXAMPLES));
   const [priceFilter, setPriceFilter] = useState(null);
   const [discoverAngle, setDiscoverAngle] = useState(null);
+  const [worldCountry, setWorldCountry] = useState(null);
+  const [worldProducts, setWorldProducts] = useState([]);
+  const [worldLoading, setWorldLoading] = useState(false);
+  const [worldError, setWorldError] = useState(null);
+  const [worldAngle, setWorldAngle] = useState(null);
 
   // Onboarding
   const [showOnboardingPrompt, setShowOnboardingPrompt] = useState(() => {
@@ -727,7 +825,19 @@ export default function App() {
     vibes: [], budget: null, interests: "", avoid: ""
   }); // null | 50 | 150 | 300 | 999
   const [featuredStores] = useState(() => getRandom(STORE_EXAMPLES));
-  const locale = getLocale();
+  const [localeCode, setLocaleCode] = useState(() => {
+    return localStorage.getItem("trove_country") || detectCountryCode();
+  });
+  const locale = getLocaleByCode(localeCode);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+
+  const switchCountry = (code) => {
+    setLocaleCode(code);
+    localStorage.setItem("trove_country", code);
+    setShowCountryPicker(false);
+    setProducts([]);
+    setDiscoverAngle(null);
+  };
   const [query, setQuery] = useState("");
   const [activeChips, setActiveChips] = useState([]);
   const [products, setProducts] = useState([]);
@@ -839,6 +949,48 @@ export default function App() {
       setLoading(false);
     }
   }, [activeChips, tasteProfile]);
+
+  const handleWorldExplore = async (country) => {
+    setWorldCountry(country);
+    setWorldProducts([]);
+    setWorldError(null);
+    setWorldAngle(null);
+    setWorldLoading(true);
+    try {
+      const homeCurrency = locale.currency;
+      const worldCurrency = WORLD_CURRENCY[country.code] || "USD";
+      const stores = WORLD_STORES[country.code] || "";
+      const p = profile || {};
+      const profileHint = [
+        p.vibes?.length ? p.vibes.join(", ") : "",
+        p.interests || "",
+        tasteProfile?.topCategories?.slice(0,3).join(", ") || "",
+      ].filter(Boolean).join(", ");
+
+      const res = await fetch(API_URL, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          worldMode: true,
+          worldCountry: country.name,
+          worldKnown: country.known,
+          worldCurrency,
+          homeCurrency,
+          stores,
+          profileHint,
+          locale,
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+      setWorldProducts(data.products || []);
+      if (data.angle) setWorldAngle(data.angle);
+    } catch(e) {
+      setWorldError(e.message);
+    } finally {
+      setWorldLoading(false);
+    }
+  };
 
   const saveProfile = (answers) => {
     const merged = { ...profile, ...answers, updatedAt: Date.now() };
@@ -1221,6 +1373,27 @@ ${url}`;
 
         </div>
 
+        {/* COUNTRY PICKER */}
+        {showCountryPicker && (
+          <div className="modal-overlay" onClick={() => setShowCountryPicker(false)}>
+            <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+              <div className="modal-handle" />
+              <div className="modal-title" style={{marginBottom:16}}>Shop in a different country</div>
+              <div className="country-picker-list">
+                {COUNTRIES.map(c => (
+                  <button key={c.code} className={`country-option ${localeCode === c.code ? "active" : ""}`}
+                    onClick={() => switchCountry(c.code)}>
+                    <span className="country-flag">{c.flag}</span>
+                    <span className="country-name">{c.name}</span>
+                    <span className="country-currency">{c.currency}</span>
+                    {localeCode === c.code && <span style={{color:"var(--gold)", fontSize:14}}>✓</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ONBOARDING PROMPT */}
         {showOnboardingPrompt && !showOnboarding && (
           <div className="onboarding-prompt" onClick={() => setShowOnboardingPrompt(false)}>
@@ -1351,6 +1524,78 @@ ${url}`;
                 Cancel
               </button>
             </div>
+          </div>
+        )}
+
+        {/* WORLD TAB */}
+        {tab === "world" && (
+          <div className="tab-content">
+            {!worldCountry ? (
+              <>
+                <div className="world-header">
+                  <div className="world-title">Shop the World</div>
+                  <div className="world-sub">Pick a country and Trove finds what it does best — matched to your taste.</div>
+                </div>
+                <button className="world-surprise" onClick={() => {
+                  const rand = WORLD_COUNTRIES[Math.floor(Math.random()*WORLD_COUNTRIES.length)];
+                  handleWorldExplore(rand);
+                }}>
+                  <span style={{fontSize:28}}>✦</span>
+                  <div>
+                    <div style={{fontSize:14,fontWeight:700,color:"var(--ink)"}}>Surprise me</div>
+                    <div style={{fontSize:12,color:"var(--muted)"}}>Let Trove pick a country for you</div>
+                  </div>
+                </button>
+                <div className="world-grid">
+                  {WORLD_COUNTRIES.map(c => (
+                    <button key={c.code} className="world-card" onClick={() => handleWorldExplore(c)}>
+                      <div className="world-card-flag">{c.flag}</div>
+                      <div className="world-card-name">{c.name}</div>
+                      <div className="world-card-known">{c.known}</div>
+                      <div className="world-card-vibe">{c.vibe}</div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="world-results-header">
+                  <button className="world-back" onClick={() => { setWorldCountry(null); setWorldProducts([]); }}>
+                    ← Back
+                  </button>
+                  <span style={{fontSize:24}}>{worldCountry.flag}</span>
+                  <div>
+                    <div style={{fontSize:16,fontWeight:700,color:"var(--ink)"}}>{worldCountry.name}</div>
+                    {worldAngle && <div style={{fontSize:12,color:"var(--muted)",fontStyle:"italic"}}>{worldAngle}</div>}
+                  </div>
+                </div>
+                {worldLoading && (
+                  <div style={{padding:"40px 20px",textAlign:"center",color:"var(--muted)",fontSize:13}}>
+                    <div style={{fontSize:32,marginBottom:12}}>{worldCountry.flag}</div>
+                    Exploring {worldCountry.name}...
+                  </div>
+                )}
+                {worldError && (
+                  <div className="empty-section">
+                    <div className="empty-icon">🌍</div>
+                    <div className="empty-title">Couldn't load picks</div>
+                    <div className="empty-sub">{worldError}</div>
+                    <button className="search-btn" style={{marginTop:16,borderRadius:12,padding:"12px 24px",fontSize:13}}
+                      onClick={() => handleWorldExplore(worldCountry)}>Try again</button>
+                  </div>
+                )}
+                {!worldLoading && worldProducts.length > 0 && (
+                  <div style={{padding:"0 16px 100px"}}>
+                    <div className="products-grid">
+                      {worldProducts.map((p,i) => (
+                        <ProductCard key={i} product={p} index={i}
+                          isSaved={isSaved(p)} onSave={toggleSave} onShare={handleShareItem} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
 
