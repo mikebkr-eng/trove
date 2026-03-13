@@ -4,31 +4,32 @@ export default async function handler(req, res) {
   try {
     const body = req.body || {};
     const { query, chips, tasteProfile, discover, locale } = body;
+
     const country = locale?.country || "Canada";
     const currency = locale?.currency || "CAD";
     const countryCode = locale?.countryCode || "CA";
+
     const storesByCountry = {
-      CA: "Etsy, MEC, Sport Chek, Indigo, Williams-Sonoma, Hudson's Bay, Simons, Patagonia Canada",
-      US: "Etsy, REI, Williams Sonoma, Nordstrom, Uncommon Goods, Sur La Table, Patagonia",
-      GB: "Etsy, John Lewis, Marks & Spencer, ASOS, Selfridges, Lakeland",
-      AU: "Etsy, Myer, David Jones, Kathmandu, Cotton On, Patagonia Australia",
-      NZ: "Etsy, Kathmandu, Farmers, Macpac",
-      DE: "Etsy, Zalando, About You, Otto",
-      FR: "Etsy, Fnac, Galeries Lafayette, Decathlon",
+      CA: "MEC, Sport Chek, Atmosphere, Sporting Life, Patagonia Canada, Arc'teryx, Etsy, Bass Pro, Blacks Outdoors, Altitude Sports",
+      US: "REI, Backcountry, Moosejaw, EMS, Patagonia, Arc'teryx, Etsy, Cabela's, Bass Pro, Steep & Cheap",
+      GB: "Cotswold Outdoor, Snow + Rock, Ellis Brigham, Go Outdoors, Blacks, Millets, Etsy",
+      AU: "Paddy Pallin, Anaconda, Kathmandu, Macpac, Snowgum, Etsy",
+      NZ: "Macpac, Kathmandu, Bivouac Outdoor, Etsy",
     };
     const stores = storesByCountry[countryCode] || storesByCountry["CA"];
 
     const cats = tasteProfile?.topCategories?.slice(0,3).join(", ") || "";
     const tags = tasteProfile?.topTags?.slice(0,4).join(", ") || "";
-    const liked = tasteProfile?.likedProducts?.slice(0,2).join(", ") || "";
     const profileContext = tasteProfile?.scanCount > 0
-      ? `User likes: ${cats}. Values: ${tags}.${liked ? ` Liked: ${liked}.` : ""}`
-      : "";
+      ? `User interest areas: ${cats}. Values: ${tags}.` : "";
     const categoryContext = chips?.length > 0 ? `Categories: ${chips.slice(0,3).join(", ")}.` : "";
 
     const searchPrompt = discover
-      ? `Personal shopping curator for ${country}. Find 5 exciting products the user would love from: ${stores}. ${profileContext} ${categoryContext} Prices in ${currency}. Products available in ${country}.`
-      : `Shopping assistant for ${country}. Find 5 products for: "${query}". ${categoryContext} ${profileContext} From: ${stores}. Vary stores. Prices in ${currency}. Available in ${country}.`;
+      ? `Personal shopping curator for ${country}. Find 5 exciting products from: ${stores}. ${profileContext} ${categoryContext} Prices in ${currency}. Real products available in ${country}.`
+      : `You are a shopping assistant for ${country}. The user is searching for: "${query}". 
+Search specifically for this product. Look across these stores: ${stores} — and also any other specialty retailers that carry this type of product in ${country}.
+${categoryContext} ${profileContext}
+Find 4-5 specific real products with real prices in ${currency}. If mainstream stores don't carry it, look at specialty retailers, direct brand websites, or Etsy. Always return results even for niche products.`;
 
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -43,40 +44,43 @@ export default async function handler(req, res) {
         tools: [{ type: "web_search_20250305", name: "web_search" }],
         messages: [
           { role: "user", content: searchPrompt },
-          { role: "assistant", content: [{ type: "text", text: "I'll search for the best products for this user." }] },
+          { role: "assistant", content: [{ type: "text", text: "I'll search for those products now." }] },
           {
             role: "user",
-            content: `Output ONLY a raw JSON object starting with { and ending with }, no markdown, no backticks:
+            content: `Output ONLY raw JSON starting with { and ending with }, no markdown:
 {
   "products": [
     {
-      "name": "Product Name",
+      "name": "Exact Product Name",
       "store": "Store Name",
-      "price": "price in local currency e.g. CAD 49.99 or USD 39.99",
-      "priceSub": "optional note like 'free shipping' or 'handmade'",
-      "why": "1-2 sentences on why this matches the user specifically",
+      "price": "price in ${currency}",
+      "priceSub": "short note e.g. free shipping, limited stock",
+      "why": "1-2 sentences on why this is a great pick",
       "matchReason": true,
-      "url": "https://direct-product-url.com",
-      "tags": ["tag1", "tag2", "tag3"]
+      "url": "https://real-product-url.com",
+      "tags": ["tag1", "tag2"]
     }
   ]
 }
-Include 5-6 products. Use real URLs. Vary the stores — don't repeat the same store more than twice.`
+Include 4-5 products. Use real direct URLs. If you can't find a specific product page, link to the search results page for that store. Never return an empty products array — always find something relevant.`
           }
         ]
       })
     });
 
     const d = await r.json();
-    if (!r.ok) return res.status(502).json({ error: "Search failed: " + JSON.stringify(d?.error) });
+    if (!r.ok) return res.status(502).json({ error: "Search failed — " + (d?.error?.message || "please try again") });
 
     const text = d.content?.filter(b => b.type === "text").map(b => b.text).join("") || "";
     const start = text.indexOf("{");
     const end = text.lastIndexOf("}");
-    if (start === -1 || end === -1) return res.status(500).json({ error: "No products found. Try a different search." });
+    if (start === -1 || end === -1) return res.status(500).json({ error: "No products found for that search. Try rephrasing — e.g. 'ice climbing gear' or 'mountaineering crampons'." });
 
     try {
       const parsed = JSON.parse(text.slice(start, end + 1));
+      if (!parsed.products?.length) {
+        return res.status(200).json({ products: [], message: "No results found. Try a broader search term." });
+      }
       return res.status(200).json(parsed);
     } catch {
       return res.status(500).json({ error: "Could not read results. Please try again." });
