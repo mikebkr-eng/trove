@@ -3,7 +3,20 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body || {};
-    const { query, chips, tasteProfile, discover } = body;
+    const { query, chips, tasteProfile, discover, locale } = body;
+    const country = locale?.country || "Canada";
+    const currency = locale?.currency || "CAD";
+    const countryCode = locale?.countryCode || "CA";
+    const storesByCountry = {
+      CA: "Etsy, MEC, Sport Chek, Indigo, Williams-Sonoma, Hudson's Bay, Simons, Patagonia Canada",
+      US: "Etsy, REI, Williams Sonoma, Nordstrom, Uncommon Goods, Sur La Table, Patagonia",
+      GB: "Etsy, John Lewis, Marks & Spencer, ASOS, Selfridges, Lakeland",
+      AU: "Etsy, Myer, David Jones, Kathmandu, Cotton On, Patagonia Australia",
+      NZ: "Etsy, Kathmandu, Farmers, Macpac",
+      DE: "Etsy, Zalando, About You, Otto",
+      FR: "Etsy, Fnac, Galeries Lafayette, Decathlon",
+    };
+    const stores = storesByCountry[countryCode] || storesByCountry["CA"];
 
     const cats = tasteProfile?.topCategories?.slice(0,3).join(", ") || "";
     const tags = tasteProfile?.topTags?.slice(0,4).join(", ") || "";
@@ -13,10 +26,9 @@ export default async function handler(req, res) {
       : "";
     const categoryContext = chips?.length > 0 ? `Categories: ${chips.slice(0,3).join(", ")}.` : "";
 
-    const stores = "Etsy, REI, Patagonia, Williams Sonoma, Uncommon Goods, MEC, Nordstrom, Sur La Table";
     const searchPrompt = discover
-      ? `Personal shopping curator. Find 5 exciting products the user would love from: ${stores}. ${profileContext} ${categoryContext} Real products, real prices, no Amazon basics.`
-      : `Shopping assistant. Find 5 products for: "${query}". ${categoryContext} ${profileContext} From: ${stores}. Vary the stores.`;
+      ? `Personal shopping curator for ${country}. Find 5 exciting products the user would love from: ${stores}. ${profileContext} ${categoryContext} Prices in ${currency}. Products available in ${country}.`
+      : `Shopping assistant for ${country}. Find 5 products for: "${query}". ${categoryContext} ${profileContext} From: ${stores}. Vary stores. Prices in ${currency}. Available in ${country}.`;
 
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -40,7 +52,7 @@ export default async function handler(req, res) {
     {
       "name": "Product Name",
       "store": "Store Name",
-      "price": "$XX.XX",
+      "price": "price in local currency e.g. CAD 49.99 or USD 39.99",
       "priceSub": "optional note like 'free shipping' or 'handmade'",
       "why": "1-2 sentences on why this matches the user specifically",
       "matchReason": true,
