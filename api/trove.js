@@ -3,7 +3,7 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body || {};
-    const { query, chips, tasteProfile, discover, locale } = body;
+    const { query, chips, tasteProfile, discover, locale, priceFilter } = body;
 
     const country = locale?.country || "Canada";
     const currency = locale?.currency || "CAD";
