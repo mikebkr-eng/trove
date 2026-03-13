@@ -67,60 +67,153 @@ function getRandomN(arr, n) {
 }
 
 const WORLD_COUNTRIES = [
-  { code:"JP", name:"Japan",          flag:"🇯🇵", known:"Knives, stationery, ceramics", vibe:"Precise, minimal, beautiful" },
-  { code:"IT", name:"Italy",          flag:"🇮🇹", known:"Kitchen, leather, fashion",    vibe:"Crafted with passion" },
-  { code:"FR", name:"France",         flag:"🇫🇷", known:"Beauty, cookware, linen",      vibe:"Effortlessly refined" },
-  { code:"DE", name:"Germany",        flag:"🇩🇪", known:"Tools, engineering, outdoor",  vibe:"Built to last" },
-  { code:"GB", name:"United Kingdom", flag:"🇬🇧", known:"Wool, tea, heritage brands",   vibe:"Classic with character" },
-  { code:"SE", name:"Sweden",         flag:"🇸🇪", known:"Design, outdoor, homeware",    vibe:"Clean, functional, warm" },
-  { code:"DK", name:"Denmark",        flag:"🇩🇰", known:"Design, cycling, hygge",       vibe:"Cosy and considered" },
-  { code:"US", name:"United States",  flag:"🇺🇸", known:"Outdoor gear, denim, tech",    vibe:"Go big or go home" },
-  { code:"AU", name:"Australia",      flag:"🇦🇺", known:"Surf, skincare, outdoor",      vibe:"Laid-back and sun-worn" },
-  { code:"NZ", name:"New Zealand",    flag:"🇳🇿", known:"Wool, adventure gear, honey",  vibe:"Pure and rugged" },
-  { code:"KR", name:"South Korea",    flag:"🇰🇷", known:"Skincare, tech, stationery",   vibe:"Innovative and precise" },
-  { code:"PT", name:"Portugal",       flag:"🇵🇹", known:"Ceramics, cork, linen",        vibe:"Simple and soulful" },
-  { code:"MX", name:"Mexico",         flag:"🇲🇽", known:"Textiles, ceramics, spices",   vibe:"Vibrant and handmade" },
-  { code:"IN", name:"India",          flag:"🇮🇳", known:"Textiles, spices, jewelry",    vibe:"Rich, colourful, artisan" },
+  // Americas
+  { code:"US", name:"United States",   flag:"🇺🇸", known:"Outdoor gear, denim, tech",        vibe:"Go big or go home" },
+  { code:"CA", name:"Canada",          flag:"🇨🇦", known:"Outdoor, maple, hockey",            vibe:"Rugged and wholesome" },
+  { code:"MX", name:"Mexico",          flag:"🇲🇽", known:"Textiles, ceramics, spices",        vibe:"Vibrant and handmade" },
+  { code:"BR", name:"Brazil",          flag:"🇧🇷", known:"Swimwear, coffee, leather",         vibe:"Bold and sun-soaked" },
+  { code:"AR", name:"Argentina",       flag:"🇦🇷", known:"Leather, wine, yerba mate",         vibe:"Passionate and refined" },
+  { code:"CO", name:"Colombia",        flag:"🇨🇴", known:"Coffee, flowers, crafts",           vibe:"Warm and vibrant" },
+  { code:"PE", name:"Peru",            flag:"🇵🇪", known:"Alpaca wool, ceramics, textiles",   vibe:"Ancient and artisan" },
+  // Europe
+  { code:"GB", name:"United Kingdom",  flag:"🇬🇧", known:"Wool, tea, heritage brands",        vibe:"Classic with character" },
+  { code:"FR", name:"France",          flag:"🇫🇷", known:"Beauty, cookware, linen",           vibe:"Effortlessly refined" },
+  { code:"IT", name:"Italy",           flag:"🇮🇹", known:"Kitchen, leather, fashion",         vibe:"Crafted with passion" },
+  { code:"DE", name:"Germany",         flag:"🇩🇪", known:"Tools, engineering, outdoor",       vibe:"Built to last" },
+  { code:"SE", name:"Sweden",          flag:"🇸🇪", known:"Design, outdoor, homeware",         vibe:"Clean, functional, warm" },
+  { code:"DK", name:"Denmark",         flag:"🇩🇰", known:"Design, cycling, hygge",            vibe:"Cosy and considered" },
+  { code:"NO", name:"Norway",          flag:"🇳🇴", known:"Outdoor, seafood, knitwear",        vibe:"Wild and wholesome" },
+  { code:"FI", name:"Finland",         flag:"🇫🇮", known:"Sauna, design, outdoor",            vibe:"Quietly exceptional" },
+  { code:"NL", name:"Netherlands",     flag:"🇳🇱", known:"Cycling, tulips, design",           vibe:"Practical and beautiful" },
+  { code:"BE", name:"Belgium",         flag:"🇧🇪", known:"Chocolate, beer, lace",             vibe:"Quietly indulgent" },
+  { code:"CH", name:"Switzerland",     flag:"🇨🇭", known:"Watches, chocolate, knives",        vibe:"Precise and timeless" },
+  { code:"AT", name:"Austria",         flag:"🇦🇹", known:"Crystal, coffee, alpine gear",      vibe:"Elegant and outdoorsy" },
+  { code:"ES", name:"Spain",           flag:"🇪🇸", known:"Ceramics, olive oil, fashion",      vibe:"Warm and spirited" },
+  { code:"PT", name:"Portugal",        flag:"🇵🇹", known:"Ceramics, cork, linen",             vibe:"Simple and soulful" },
+  { code:"GR", name:"Greece",          flag:"🇬🇷", known:"Olive oil, ceramics, textiles",     vibe:"Sun-warmed and ancient" },
+  { code:"PL", name:"Poland",          flag:"🇵🇱", known:"Amber jewelry, pottery, linen",     vibe:"Crafted and heartfelt" },
+  { code:"CZ", name:"Czech Republic",  flag:"🇨🇿", known:"Crystal, beer, folk crafts",        vibe:"Bohemian and beautiful" },
+  { code:"HU", name:"Hungary",         flag:"🇭🇺", known:"Embroidery, paprika, folk art",     vibe:"Rich and colourful" },
+  // Asia & Pacific
+  { code:"JP", name:"Japan",           flag:"🇯🇵", known:"Knives, stationery, ceramics",      vibe:"Precise, minimal, beautiful" },
+  { code:"KR", name:"South Korea",     flag:"🇰🇷", known:"Skincare, tech, stationery",        vibe:"Innovative and precise" },
+  { code:"CN", name:"China",           flag:"🇨🇳", known:"Tea, silk, porcelain",              vibe:"Ancient craft meets modern" },
+  { code:"TW", name:"Taiwan",          flag:"🇹🇼", known:"Tea, tech, street food tools",      vibe:"Thoughtful and inventive" },
+  { code:"HK", name:"Hong Kong",       flag:"🇭🇰", known:"Fashion, electronics, tea ware",    vibe:"Fast, sharp, stylish" },
+  { code:"SG", name:"Singapore",       flag:"🇸🇬", known:"Food culture, design, tech",        vibe:"Efficient and eclectic" },
+  { code:"TH", name:"Thailand",        flag:"🇹🇭", known:"Silk, ceramics, spa products",      vibe:"Graceful and golden" },
+  { code:"VN", name:"Vietnam",         flag:"🇻🇳", known:"Silk, lacquerware, coffee",         vibe:"Delicate and aromatic" },
+  { code:"IN", name:"India",           flag:"🇮🇳", known:"Textiles, spices, jewelry",         vibe:"Rich, colourful, artisan" },
+  { code:"ID", name:"Indonesia",       flag:"🇮🇩", known:"Batik, rattan, coffee",             vibe:"Tropical and handmade" },
+  { code:"AU", name:"Australia",       flag:"🇦🇺", known:"Surf, skincare, outdoor",           vibe:"Laid-back and sun-worn" },
+  { code:"NZ", name:"New Zealand",     flag:"🇳🇿", known:"Wool, adventure gear, honey",       vibe:"Pure and rugged" },
+  // Middle East & Africa
+  { code:"MA", name:"Morocco",         flag:"🇲🇦", known:"Leather, ceramics, argan oil",      vibe:"Warm, spiced, artisan" },
+  { code:"ZA", name:"South Africa",    flag:"🇿🇦", known:"Wine, rooibos, beadwork",           vibe:"Bold and earthy" },
+  { code:"NG", name:"Nigeria",         flag:"🇳🇬", known:"Textiles, beads, fashion",          vibe:"Vibrant and proud" },
+  { code:"ET", name:"Ethiopia",        flag:"🇪🇹", known:"Coffee, textiles, honey",           vibe:"Ancient and aromatic" },
+  { code:"TR", name:"Turkey",          flag:"🇹🇷", known:"Ceramics, rugs, spices",            vibe:"Rich and layered" },
+  { code:"IL", name:"Israel",          flag:"🇮🇱", known:"Dead Sea skincare, tech, food",     vibe:"Innovative and ancient" },
+  { code:"AE", name:"UAE",             flag:"🇦🇪", known:"Luxury, perfume, dates",            vibe:"Opulent and fragrant" },
 ];
 
 const WORLD_CURRENCY = {
-  JP:"JPY", IT:"EUR", FR:"EUR", DE:"EUR", GB:"GBP", SE:"SEK",
-  DK:"DKK", US:"USD", AU:"AUD", NZ:"NZD", KR:"KRW", PT:"EUR",
-  MX:"MXN", IN:"INR",
+  US:"USD", CA:"CAD", MX:"MXN", BR:"BRL", AR:"ARS", CO:"COP", PE:"PEN",
+  GB:"GBP", FR:"EUR", IT:"EUR", DE:"EUR", SE:"SEK", DK:"DKK", NO:"NOK",
+  FI:"EUR", NL:"EUR", BE:"EUR", CH:"CHF", AT:"EUR", ES:"EUR", PT:"EUR",
+  GR:"EUR", PL:"PLN", CZ:"CZK", HU:"HUF",
+  JP:"JPY", KR:"KRW", CN:"CNY", TW:"TWD", HK:"HKD", SG:"SGD",
+  TH:"THB", VN:"VND", IN:"INR", ID:"IDR", AU:"AUD", NZ:"NZD",
+  MA:"MAD", ZA:"ZAR", NG:"NGN", ET:"ETB", TR:"TRY", IL:"ILS", AE:"AED",
 };
 
 const WORLD_STORES = {
+  US: "REI, Patagonia, Levi's, Filson, American Etsy sellers, Buck Mason, Everlane",
+  CA: "MEC, Roots, Etsy Canada, Arc'teryx, Indigo, Sport Chek",
+  MX: "Mexican Etsy sellers, Fonart, local artisan brands, Mercado Libre",
+  BR: "Brazilian Etsy sellers, Americanas, local leather brands",
+  AR: "Argentinian Etsy sellers, local leather brands, Mercado Libre",
+  CO: "Colombian Etsy sellers, local coffee brands, artisan cooperatives",
+  PE: "Peruvian Etsy sellers, alpaca wool brands, artisan cooperatives",
+  GB: "John Lewis, Monocle Shop, Etsy UK, Lakeland, Wool and the Gang, Oliver Bonas",
+  FR: "Le Creuset, Maison du Monde, French Etsy sellers, Merci Paris, BHV, Jacquemus",
+  IT: "Etsy Italian sellers, La Rinascente, Artemest, Italian leather brands, Alessi",
+  DE: "Manufactum, Globetrotter, German Etsy sellers, WMF, Zwilling, Rosenthal",
+  SE: "IKEA, Åhléns, Swedish Etsy sellers, Fjällräven, Granit, Acne Studios",
+  DK: "Hay, Normann Copenhagen, Danish Etsy sellers, Stelton, Bang & Olufsen",
+  NO: "Norwegian Etsy sellers, Dale of Norway, Helly Hansen, Norse Projects",
+  FI: "Marimekko, Iittala, Finnish Etsy sellers, Moomin shop, Fiskars",
+  NL: "HEMA, Dutch Etsy sellers, Droog, Scotch & Soda, Van Cleef",
+  BE: "Belgian Etsy sellers, Neuhaus chocolate, Delvaux, local lace makers",
+  CH: "Victorinox, Swiss Etsy sellers, Swatch, Lindt, local watchmakers",
+  AT: "Swarovski, Austrian Etsy sellers, Loden Plankl, Julius Meinl",
+  ES: "Zara Home, Spanish Etsy sellers, Lladró, local ceramic brands, Desigual",
+  PT: "Bordallo Pinheiro, Portuguese Etsy sellers, Vista Alegre, cork brands",
+  GR: "Greek Etsy sellers, Korres, local olive oil brands, Papilionaceae",
+  PL: "Polish Etsy sellers, Bolesławiec pottery, amber jewelers, linen brands",
+  CZ: "Moser glass, Czech Etsy sellers, Bohemia Crystal, local folk crafts",
+  HU: "Hungarian Etsy sellers, Herend porcelain, Zsolnay, folk embroidery brands",
   JP: "Muji, Tokyu Hands, Loft, Rakuten, Amazon Japan, Japanese Etsy sellers",
-  IT: "Etsy Italian sellers, La Rinascente, Artemest, Italian leather brands",
-  FR: "Le Creuset, Maison du Monde, French Etsy sellers, Merci Paris, BHV",
-  DE: "Manufactum, Globetrotter, German Etsy sellers, WMF, Zwilling",
-  GB: "John Lewis, Monocle Shop, Etsy UK, Lakeland, Wool and the Gang",
-  SE: "IKEA, Åhléns, Swedish Etsy sellers, Fjällräven, Granit",
-  DK: "Hay, Normann Copenhagen, Danish Etsy sellers, Aiaiai, Stelton",
-  US: "REI, Patagonia, Levi's, Filson, American Etsy sellers, Buck Mason",
+  KR: "Olive Young, Korean Etsy sellers, Musinsa, Innisfree, 10x10",
+  CN: "Chinese Etsy sellers, Tea brands, silk producers, porcelain makers",
+  TW: "Taiwanese Etsy sellers, local tea brands, design studios",
+  HK: "Lane Crawford, Hong Kong Etsy sellers, G.O.D., local designers",
+  SG: "Singaporean Etsy sellers, Charles & Keith, local food brands",
+  TH: "Thai Etsy sellers, Jim Thompson silk, local spa brands, Doi Tung",
+  VN: "Vietnamese Etsy sellers, local silk brands, lacquerware makers",
+  IN: "Fabindia, Indian Etsy sellers, Good Earth, Anokhi, Nykaa",
+  ID: "Indonesian Etsy sellers, batik makers, rattan brands, local coffee",
   AU: "Kathmandu, R.M. Williams, Australian Etsy sellers, Aesop, Country Road",
   NZ: "Allbirds, Icebreaker, Macpac, New Zealand Etsy sellers, Swanndri",
-  KR: "Olive Young, Korean Etsy sellers, Musinsa, Innisfree, 10x10",
-  PT: "Bordallo Pinheiro, Portuguese Etsy sellers, Vista Alegre, Cork brands",
-  MX: "Mexican Etsy sellers, Fonart, local artisan brands",
-  IN: "Fabindia, Indian Etsy sellers, Good Earth, Anokhi",
+  MA: "Moroccan Etsy sellers, local argan oil brands, leather souks, carpet makers",
+  ZA: "South African Etsy sellers, Woolworths SA, Faithful to Nature, local wine",
+  NG: "Nigerian Etsy sellers, local textile brands, Afrocentric designers",
+  ET: "Ethiopian Etsy sellers, local coffee brands, textile cooperatives",
+  TR: "Turkish Etsy sellers, Pasabahce, local rug makers, spice brands",
+  IL: "Israeli Etsy sellers, Ahava, local Dead Sea brands, Naot footwear",
+  AE: "UAE Etsy sellers, local perfume brands, luxury dates, Arabian Oud",
 };
 
 const COUNTRIES = [
-  { code:"CA", name:"Canada",         currency:"CAD", flag:"🇨🇦" },
-  { code:"US", name:"United States",  currency:"USD", flag:"🇺🇸" },
-  { code:"GB", name:"United Kingdom", currency:"GBP", flag:"🇬🇧" },
-  { code:"AU", name:"Australia",      currency:"AUD", flag:"🇦🇺" },
-  { code:"NZ", name:"New Zealand",    currency:"NZD", flag:"🇳🇿" },
-  { code:"FR", name:"France",         currency:"EUR", flag:"🇫🇷" },
-  { code:"DE", name:"Germany",        currency:"EUR", flag:"🇩🇪" },
-  { code:"NL", name:"Netherlands",    currency:"EUR", flag:"🇳🇱" },
-  { code:"ES", name:"Spain",          currency:"EUR", flag:"🇪🇸" },
-  { code:"IT", name:"Italy",          currency:"EUR", flag:"🇮🇹" },
-  { code:"JP", name:"Japan",          currency:"JPY", flag:"🇯🇵" },
-  { code:"KR", name:"South Korea",    currency:"KRW", flag:"🇰🇷" },
-  { code:"SG", name:"Singapore",      currency:"SGD", flag:"🇸🇬" },
-  { code:"HK", name:"Hong Kong",      currency:"HKD", flag:"🇭🇰" },
+  { code:"CA", name:"Canada",          currency:"CAD", flag:"🇨🇦" },
+  { code:"US", name:"United States",   currency:"USD", flag:"🇺🇸" },
+  { code:"GB", name:"United Kingdom",  currency:"GBP", flag:"🇬🇧" },
+  { code:"AU", name:"Australia",       currency:"AUD", flag:"🇦🇺" },
+  { code:"NZ", name:"New Zealand",     currency:"NZD", flag:"🇳🇿" },
+  { code:"FR", name:"France",          currency:"EUR", flag:"🇫🇷" },
+  { code:"DE", name:"Germany",         currency:"EUR", flag:"🇩🇪" },
+  { code:"NL", name:"Netherlands",     currency:"EUR", flag:"🇳🇱" },
+  { code:"ES", name:"Spain",           currency:"EUR", flag:"🇪🇸" },
+  { code:"IT", name:"Italy",           currency:"EUR", flag:"🇮🇹" },
+  { code:"PT", name:"Portugal",        currency:"EUR", flag:"🇵🇹" },
+  { code:"SE", name:"Sweden",          currency:"SEK", flag:"🇸🇪" },
+  { code:"DK", name:"Denmark",         currency:"DKK", flag:"🇩🇰" },
+  { code:"NO", name:"Norway",          currency:"NOK", flag:"🇳🇴" },
+  { code:"FI", name:"Finland",         currency:"EUR", flag:"🇫🇮" },
+  { code:"BE", name:"Belgium",         currency:"EUR", flag:"🇧🇪" },
+  { code:"CH", name:"Switzerland",     currency:"CHF", flag:"🇨🇭" },
+  { code:"AT", name:"Austria",         currency:"EUR", flag:"🇦🇹" },
+  { code:"GR", name:"Greece",          currency:"EUR", flag:"🇬🇷" },
+  { code:"PL", name:"Poland",          currency:"PLN", flag:"🇵🇱" },
+  { code:"JP", name:"Japan",           currency:"JPY", flag:"🇯🇵" },
+  { code:"KR", name:"South Korea",     currency:"KRW", flag:"🇰🇷" },
+  { code:"CN", name:"China",           currency:"CNY", flag:"🇨🇳" },
+  { code:"TW", name:"Taiwan",          currency:"TWD", flag:"🇹🇼" },
+  { code:"HK", name:"Hong Kong",       currency:"HKD", flag:"🇭🇰" },
+  { code:"SG", name:"Singapore",       currency:"SGD", flag:"🇸🇬" },
+  { code:"TH", name:"Thailand",        currency:"THB", flag:"🇹🇭" },
+  { code:"IN", name:"India",           currency:"INR", flag:"🇮🇳" },
+  { code:"ID", name:"Indonesia",       currency:"IDR", flag:"🇮🇩" },
+  { code:"MX", name:"Mexico",          currency:"MXN", flag:"🇲🇽" },
+  { code:"BR", name:"Brazil",          currency:"BRL", flag:"🇧🇷" },
+  { code:"AR", name:"Argentina",       currency:"ARS", flag:"🇦🇷" },
+  { code:"CO", name:"Colombia",        currency:"COP", flag:"🇨🇴" },
+  { code:"TR", name:"Turkey",          currency:"TRY", flag:"🇹🇷" },
+  { code:"IL", name:"Israel",          currency:"ILS", flag:"🇮🇱" },
+  { code:"AE", name:"UAE",             currency:"AED", flag:"🇦🇪" },
+  { code:"ZA", name:"South Africa",    currency:"ZAR", flag:"🇿🇦" },
+  { code:"MA", name:"Morocco",         currency:"MAD", flag:"🇲🇦" },
+  { code:"NG", name:"Nigeria",         currency:"NGN", flag:"🇳🇬" },
 ];
 
 function detectCountryCode() {
@@ -1557,16 +1650,27 @@ ${url}`;
                     <div style={{fontSize:12,color:"var(--muted)"}}>Let Trove pick a country for you</div>
                   </div>
                 </button>
-                <div className="world-grid">
-                  {WORLD_COUNTRIES.map(c => (
-                    <button key={c.code} className="world-card" onClick={() => handleWorldExplore(c)}>
-                      <div className="world-card-flag">{c.flag}</div>
-                      <div className="world-card-name">{c.name}</div>
-                      <div className="world-card-known">{c.known}</div>
-                      <div className="world-card-vibe">{c.vibe}</div>
-                    </button>
-                  ))}
-                </div>
+                {[
+                  { label:"🌎 Americas", codes:["US","CA","MX","BR","AR","CO","PE"] },
+                  { label:"🌍 Europe", codes:["GB","FR","IT","DE","SE","DK","NO","FI","NL","BE","CH","AT","ES","PT","GR","PL","CZ","HU"] },
+                  { label:"🌏 Asia & Pacific", codes:["JP","KR","CN","TW","HK","SG","TH","VN","IN","ID","AU","NZ"] },
+                  { label:"🌍 Middle East & Africa", codes:["MA","ZA","NG","ET","TR","IL","AE"] },
+                ].map(region => (
+                  <div key={region.label} style={{marginBottom:8}}>
+                    <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:1,
+                      color:"var(--muted)",padding:"12px 16px 8px"}}>{region.label}</div>
+                    <div className="world-grid">
+                      {WORLD_COUNTRIES.filter(c => region.codes.includes(c.code)).map(c => (
+                        <button key={c.code} className="world-card" onClick={() => handleWorldExplore(c)}>
+                          <div className="world-card-flag">{c.flag}</div>
+                          <div className="world-card-name">{c.name}</div>
+                          <div className="world-card-known">{c.known}</div>
+                          <div className="world-card-vibe">{c.vibe}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </>
             ) : (
               <>
