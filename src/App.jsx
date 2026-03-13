@@ -332,7 +332,7 @@ const styles = `
   .country-currency { font-size: 12px; color: var(--muted); font-weight: 500; }
 
   .price-filter-row {
-    display: flex; gap: 6px; padding: 10px 20px 0; overflow-x: auto; scrollbar-width: none;
+    display: flex; gap: 6px; padding: 12px 16px 4px; overflow-x: auto; scrollbar-width: none;
   }
   .price-filter-row::-webkit-scrollbar { display: none; }
   .price-chip {
@@ -363,7 +363,7 @@ const styles = `
   .section-sub { font-size: 12px; color: var(--muted); font-weight: 500; }
 
   /* ── PRODUCT CARD ── */
-  .products-grid { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
+  .products-grid { padding: 0 16px; display: flex; flex-direction: column; gap: 16px; }
   .product-card {
     background: var(--warm-white); border-radius: 14px;
     border: 1px solid var(--border); box-shadow: var(--card-shadow);
@@ -374,7 +374,7 @@ const styles = `
     from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .product-card-body { padding: 16px; }
+  .product-card-body { padding: 20px; }
   .product-store-row {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 10px;
@@ -1073,9 +1073,20 @@ ${url}`;
                   Find things you'll <span>love.</span>
                 </div>
                 <div className="discover-sub">
-                  {tasteProfile?.scanCount > 0
-                    ? <><strong>Based on {tasteProfile.scanCount} scans</strong> · Shopping in {locale.country}</>
-                    : <><strong>Shopping in {locale.country}</strong> · {featuredStores.join(" · ")}</>}
+                  <button onClick={() => setShowCountryPicker(true)} style={{
+                    background:"none", border:"none", cursor:"pointer", padding:0,
+                    fontFamily:"DM Sans,sans-serif", textAlign:"left",
+                    display:"inline-flex", alignItems:"center", gap:6, marginBottom:4,
+                  }}>
+                    <span style={{fontSize:18, lineHeight:1}}>{locale.flag}</span>
+                    <strong style={{color:"var(--ink)", fontSize:13}}>{locale.name}</strong>
+                    <span style={{fontSize:11, color:"var(--muted)"}}>· tap to change</span>
+                  </button>
+                  <div style={{fontSize:12, color:"var(--muted)"}}>
+                    {tasteProfile?.scanCount > 0
+                      ? `Based on ${tasteProfile.scanCount} scans`
+                      : featuredStores.join(" · ")}
+                  </div>
                 </div>
                 <div className="search-row">
                   <div className="search-box">
@@ -1166,7 +1177,7 @@ ${url}`;
 
               {!loading && products.length > 0 && (
                 <>
-                  <div className="section-header">
+                  <div className="section-header" style={{marginTop: 8}}>
                     <div>
                       <div className="section-title">
                         {query ? `Results for "${query}"` : "Picked for you"}
