@@ -34,6 +34,33 @@ const STORE_EXAMPLES = [
 ];
 
 function getRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// Encode/decode store for sharing via URL
+function encodeStore(items) {
+  try {
+    const slim = items.slice(0,10).map(p => ({
+      n: p.name, s: p.store, p: p.price, u: p.url, w: p.why?.slice(0,80)
+    }));
+    return btoa(encodeURIComponent(JSON.stringify(slim)));
+  } catch { return null; }
+}
+
+function decodeStore(encoded) {
+  try {
+    return JSON.parse(decodeURIComponent(atob(encoded))).map(p => ({
+      name: p.n, store: p.s, price: p.p, url: p.u, why: p.w, matchReason: true, tags: []
+    }));
+  } catch { return null; }
+}
+
+function getUserHandle() {
+  let handle = localStorage.getItem("trove_handle");
+  if (!handle) {
+    handle = "trove-" + Math.random().toString(36).slice(2,6);
+    localStorage.setItem("trove_handle", handle);
+  }
+  return handle;
+}
 function getRandomN(arr, n) {
   const shuffled = [...arr].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, n);
@@ -376,6 +403,62 @@ const styles = `
     padding: 12px 0;
   }
 
+  /* Share modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(26,24,20,0.5);
+    z-index: 200; display: flex; align-items: flex-end; justify-content: center;
+    animation: fadeIn 0.15s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  .modal-sheet {
+    background: var(--warm-white); border-radius: 20px 20px 0 0;
+    padding: 28px 24px 40px; width: 100%; max-width: 430px;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(40px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+  .modal-handle {
+    width: 36px; height: 4px; border-radius: 2px;
+    background: var(--border2); margin: 0 auto 20px;
+  }
+  .modal-title {
+    font-family: "Playfair Display", serif;
+    font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 6px;
+  }
+  .modal-sub { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+  .modal-preview {
+    background: var(--cream); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
+  }
+  .modal-preview-name { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+  .modal-preview-meta { font-size: 12px; color: var(--muted); }
+  .modal-msg {
+    background: var(--cream); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
+    font-size: 13px; color: var(--ink2); line-height: 1.7; font-style: italic;
+  }
+  .modal-btn {
+    width: 100%; padding: 14px; border-radius: 12px;
+    border: none; font-family: "DM Sans", sans-serif;
+    font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+    margin-bottom: 8px;
+  }
+  .modal-btn-primary { background: var(--ink); color: white; }
+  .modal-btn-primary:hover { background: var(--ink2); }
+  .modal-btn-primary.copied { background: var(--sage); }
+  .modal-btn-secondary {
+    background: none; border: 1.5px solid var(--border2) !important;
+    color: var(--ink2); font-size: 13px;
+  }
+
+  /* Share button on card */
+  .btn-share {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--cream);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s; color: var(--muted); flex-shrink: 0;
+  }
+  .btn-share:hover { border-color: var(--gold-mid); color: var(--gold); background: var(--gold-light); }
+
   /* error */
   .error-bar {
     margin: 16px 20px; padding: 12px 16px; border-radius: 10px;
@@ -416,7 +499,7 @@ const DISCOVER_CHIPS = [
 ];
 
 // ── PRODUCT CARD ─────────────────────────────────────────────────────────────
-function ProductCard({ product, isSaved, onSave, index }) {
+function ProductCard({ product, isSaved, onSave, onShare, index }) {
   return (
     <div className="product-card" style={{ animationDelay: `${index * 0.08}s` }}>
       <div className="product-card-body">
@@ -444,6 +527,13 @@ function ProductCard({ product, isSaved, onSave, index }) {
             {product.priceSub && <div className="product-price-sub">{product.priceSub}</div>}
           </div>
           <div className="product-actions">
+            <button className="btn-share" onClick={() => onShare && onShare(product)} title="Send to a friend">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+            </button>
             <button className={`btn-save ${isSaved ? "saved" : ""}`} onClick={() => onSave(product)}>
               {isSaved ? "✓ Saved" : "🔖 Save"}
             </button>
@@ -463,7 +553,14 @@ function ProductCard({ product, isSaved, onSave, index }) {
 
 // ── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [tab, setTab] = useState("discover");
+  // Check if viewing a shared store
+  const urlParams = new URLSearchParams(window.location.search);
+  const sharedData = urlParams.get("store");
+  const sharedItems = sharedData ? decodeStore(sharedData) : null;
+  const isSharedView = !!sharedItems;
+
+  const [tab, setTab] = useState(isSharedView ? "store" : "discover");
+  const [userHandle] = useState(getUserHandle);
   const [searchPlaceholder] = useState(() => getRandom(SEARCH_EXAMPLES));
   const [featuredStores] = useState(() => getRandom(STORE_EXAMPLES));
   const locale = getLocale();
@@ -474,6 +571,8 @@ export default function App() {
   const [loadingMsg, setLoadingMsg] = useState("Finding products...");
   const [error, setError] = useState(null);
   const [shareCopied, setShareCopied] = useState(false);
+  const [shareItem, setShareItem] = useState(null); // single item share modal
+  const [shareItemCopied, setShareItemCopied] = useState(false);
 
   // Saved store items
   const [storeItems, setStoreItems] = useState(() => {
@@ -572,9 +671,37 @@ export default function App() {
     }
   }, [activeChips, tasteProfile]);
 
+  const handleShareItem = (product) => {
+    setShareItem(product);
+    setShareItemCopied(false);
+  };
+
+  const handleCopyItem = () => {
+    if (!shareItem) return;
+    const msg = `Hey! Came across this and thought of you 😊
+
+${shareItem.name}
+${shareItem.price} · ${shareItem.store}
+
+${shareItem.url}
+
+(Found it on Trove)`;
+    navigator.clipboard.writeText(msg).then(() => {
+      setShareItemCopied(true);
+      setTimeout(() => { setShareItemCopied(false); }, 2500);
+    });
+  };
+
   const handleShare = () => {
-    const shareText = `Check out my Trove picks!\n\n${storeItems.slice(0,5).map(p => `• ${p.name} — ${p.price} (${p.store})\n  ${p.url}`).join("\n\n")}`;
-    navigator.clipboard.writeText(shareText).then(() => {
+    const encoded = encodeStore(storeItems);
+    if (!encoded) return;
+    const url = `${window.location.origin}${window.location.pathname}?store=${encoded}`;
+    const msg = `Here's what I've been into lately — my Trove 🔖
+
+No pressure at all, just sharing in case you're ever curious about what I like!
+
+${url}`;
+    navigator.clipboard.writeText(msg).then(() => {
       setShareCopied(true);
       setTimeout(() => setShareCopied(false), 2500);
     });
@@ -610,8 +737,8 @@ export default function App() {
                 </div>
                 <div className="discover-sub">
                   {tasteProfile?.scanCount > 0
-                    ? `Based on ${tasteProfile.scanCount} scans · Shopping in ${locale.country}`
-                    : `${locale.country} · ${featuredStores.join(" · ")}`}
+                    ? <><strong>Based on {tasteProfile.scanCount} scans</strong> · Shopping in {locale.country}</>
+                    : <><strong>Shopping in {locale.country}</strong> · {featuredStores.join(" · ")}</>}
                 </div>
                 <div className="search-row">
                   <div className="search-box">
@@ -686,7 +813,7 @@ export default function App() {
                   <div className="products-grid">
                     {products.map((p, i) => (
                       <ProductCard key={i} product={p} index={i}
-                        isSaved={isSaved(p)} onSave={toggleSave} />
+                        isSaved={isSaved(p)} onSave={toggleSave} onShare={handleShareItem} />
                     ))}
                   </div>
                   <div style={{padding:"20px", textAlign:"center"}}>
@@ -704,44 +831,67 @@ export default function App() {
           {tab === "store" && (
             <>
               <div className="store-header">
-                <div className="store-title">My Store</div>
-                <div className="store-sub">Your saved picks — share with friends</div>
-                {storeItems.length > 0 && (
-                  <button className={`share-btn ${shareCopied ? "share-copied" : ""}`} onClick={handleShare}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                    </svg>
-                    {shareCopied ? "Copied to clipboard!" : "Share my store"}
-                  </button>
+                {isSharedView ? (
+                  <>
+                    <div style={{fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:1, color:"var(--muted)", marginBottom:6}}>Someone's Trove</div>
+                    <div className="store-title">Their picks ✦</div>
+                    <div className="store-sub">Tap any item to buy, or save it to your own store</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="store-title">My Store</div>
+                    <div className="store-sub">{userHandle} · {storeItems.length} picks saved</div>
+                    {storeItems.length > 0 && (
+                      <button className={`share-btn ${shareCopied ? "share-copied" : ""}`} onClick={handleShare}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                        </svg>
+                        {shareCopied ? "✓ Message copied!" : "Share my Trove"}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
 
-              {storeItems.length === 0 ? (
-                <div className="empty-section">
-                  <div className="empty-icon">🔖</div>
-                  <div className="empty-title">Your store is empty</div>
-                  <div className="empty-sub">Save products from Discover to build your personal store.</div>
-                  <button className="search-btn" style={{marginTop:16, padding:"13px 28px", fontSize:14, borderRadius:12}}
-                    onClick={() => setTab("discover")}>
-                    Start discovering
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="section-header">
-                    <div className="section-title">Your picks</div>
-                    <div className="section-sub">{storeItems.length} saved</div>
+              {(() => {
+                const displayItems = isSharedView ? sharedItems : storeItems;
+                if (displayItems.length === 0) return (
+                  <div className="empty-section">
+                    <div className="empty-icon">🔖</div>
+                    <div className="empty-title">Your store is empty</div>
+                    <div className="empty-sub">Save products from Discover to build your personal store.</div>
+                    <button className="search-btn" style={{marginTop:16, padding:"13px 28px", fontSize:14, borderRadius:12}}
+                      onClick={() => setTab("discover")}>
+                      Start discovering
+                    </button>
                   </div>
-                  <div className="products-grid">
-                    {storeItems.map((p, i) => (
-                      <ProductCard key={i} product={p} index={i}
-                        isSaved={true} onSave={toggleSave} />
-                    ))}
-                  </div>
-                </>
-              )}
+                );
+                return (
+                  <>
+                    <div className="section-header">
+                      <div className="section-title">{isSharedView ? "Their picks" : "Your picks"}</div>
+                      <div className="section-sub">{displayItems.length} items</div>
+                    </div>
+                    <div className="products-grid">
+                      {displayItems.map((p, i) => (
+                        <ProductCard key={i} product={p} index={i}
+                          isSaved={!isSharedView && isSaved(p)}
+                          onSave={toggleSave} />
+                      ))}
+                    </div>
+                    {isSharedView && (
+                      <div style={{padding:"16px 20px 8px", textAlign:"center"}}>
+                        <button className="search-btn" style={{borderRadius:12, padding:"12px 24px", fontSize:13}}
+                          onClick={() => { window.location.href = window.location.pathname; }}>
+                          ✦ Open your own Trove
+                        </button>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </>
           )}
 
@@ -811,6 +961,33 @@ export default function App() {
           )}
 
         </div>
+
+        {/* SHARE ITEM MODAL */}
+        {shareItem && (
+          <div className="modal-overlay" onClick={() => setShareItem(null)}>
+            <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+              <div className="modal-handle" />
+              <div className="modal-title">Send to a friend 💌</div>
+              <div className="modal-sub">
+                Thought someone would love this? Share it with them — no strings attached.
+              </div>
+              <div className="modal-preview">
+                <div className="modal-preview-name">{shareItem.name}</div>
+                <div className="modal-preview-meta">{shareItem.price} · {shareItem.store}</div>
+              </div>
+              <div className="modal-msg">
+                "Hey! Came across this and thought of you 😊"
+              </div>
+              <button className={`modal-btn modal-btn-primary ${shareItemCopied ? "copied" : ""}`}
+                onClick={handleCopyItem}>
+                {shareItemCopied ? "✓ Copied! Go paste it in a message" : "📋 Copy message + link"}
+              </button>
+              <button className="modal-btn modal-btn-secondary" onClick={() => setShareItem(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* NAV */}
         <div className="nav">
