@@ -2,6 +2,43 @@ import { useState, useCallback, useEffect, useRef } from "react";
 
 const API_URL = "/api/trove";
 
+const SEARCH_EXAMPLES = [
+  "best ice climbing crampons under $300",
+  "handmade ceramic coffee mug",
+  "lightweight hiking boots for women",
+  "cast iron skillet for beginners",
+  "cozy merino wool sweater",
+  "sustainable yoga mat",
+  "vintage-style leather wallet",
+  "pour-over coffee kit",
+  "packable down jacket for travel",
+  "ergonomic desk chair under $500",
+  "artisan hot sauce gift set",
+  "waterproof trail running shoes",
+  "Japanese chef's knife",
+  "solar-powered camping lantern",
+  "natural skincare gift set",
+  "minimalist watch under $200",
+  "kids outdoor adventure kit",
+  "wooden cutting board handmade",
+  "cold brew coffee maker",
+  "climbing harness for beginners",
+];
+
+const STORE_EXAMPLES = [
+  ["Etsy", "MEC", "Patagonia", "Williams Sonoma", "Indigo"],
+  ["Arc'teryx", "Sport Chek", "Sur La Table", "Uncommon Goods", "Etsy"],
+  ["REI", "Backcountry", "Hudson's Bay", "Simons", "Altitude Sports"],
+  ["Sporting Life", "Chapters", "Crate & Barrel", "Ten Thousand Villages", "Etsy"],
+  ["MEC", "Patagonia", "Nordstrom", "Terrain", "Etsy"],
+];
+
+function getRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function getRandomN(arr, n) {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
+
 function getLocale() {
   const lang = navigator.language || "en-CA";
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
@@ -427,6 +464,8 @@ function ProductCard({ product, isSaved, onSave, index }) {
 // ── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [tab, setTab] = useState("discover");
+  const [searchPlaceholder] = useState(() => getRandom(SEARCH_EXAMPLES));
+  const [featuredStores] = useState(() => getRandom(STORE_EXAMPLES));
   const locale = getLocale();
   const [query, setQuery] = useState("");
   const [activeChips, setActiveChips] = useState([]);
@@ -572,7 +611,7 @@ export default function App() {
                 <div className="discover-sub">
                   {tasteProfile?.scanCount > 0
                     ? `Based on ${tasteProfile.scanCount} scans · Shopping in ${locale.country}`
-                    : `Shopping in ${locale.country} · Etsy, REI, Patagonia, kitchen stores and more`}
+                    : `${locale.country} · ${featuredStores.join(" · ")}`}
                 </div>
                 <div className="search-row">
                   <div className="search-box">
@@ -580,7 +619,7 @@ export default function App() {
                       <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                     </svg>
                     <input
-                      placeholder="e.g. cozy winter jacket under $150..."
+                      placeholder={`e.g. ${searchPlaceholder}`}
                       value={query}
                       onChange={e => setQuery(e.target.value)}
                       onKeyDown={e => e.key === "Enter" && handleSearch()}
@@ -610,7 +649,7 @@ export default function App() {
                   <div className="empty-sub">
                     {tasteProfile?.scanCount > 0
                       ? "Let us surprise you with products picked from your taste profile — things you didn't know you needed."
-                      : "Search for something specific, or let us discover products you'll love based on your interests."}
+                      : "Search for anything — gear, kitchen tools, fashion, handmade goods — or let us discover picks for you."}
                   </div>
                   <button className="search-btn" style={{marginTop:16, padding:"13px 28px", fontSize:14, borderRadius:12}}
                     onClick={handleDiscover} disabled={loading}>
@@ -618,8 +657,15 @@ export default function App() {
                   </button>
                 </div>
               )}
+              {!loading && products.length === 0 && error && (
+                <div className="empty-section">
+                  <div className="empty-icon">🔍</div>
+                  <div className="empty-title">Nothing found</div>
+                  <div className="empty-sub">{error}<br/><br/>Try a slightly broader term — e.g. "crampons" instead of "ice climbing crampons".</div>
+                </div>
+              )}
 
-              {error && <div className="error-bar">{error}</div>}
+              {error && products.length > 0 && <div className="error-bar">{error}</div>}
 
               {loading && (
                 <div className="loading-section">
