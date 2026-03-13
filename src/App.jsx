@@ -423,6 +423,82 @@ const styles = `
     padding: 12px 0;
   }
 
+  /* Onboarding */
+  .onboarding-overlay {
+    position: fixed; inset: 0; background: var(--cream);
+    z-index: 300; display: flex; flex-direction: column;
+    max-width: 430px; margin: 0 auto;
+  }
+  .onboarding-header {
+    padding: 52px 28px 0;
+    display: flex; flex-direction: column;
+  }
+  .onboarding-progress {
+    display: flex; gap: 6px; margin-bottom: 32px;
+  }
+  .onboarding-progress-dot {
+    height: 3px; flex: 1; border-radius: 2px; background: var(--border2);
+    transition: background 0.3s;
+  }
+  .onboarding-progress-dot.done { background: var(--gold); }
+  .onboarding-question {
+    font-family: "Playfair Display", serif;
+    font-size: 26px; font-weight: 700; color: var(--ink);
+    line-height: 1.25; margin-bottom: 8px;
+  }
+  .onboarding-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+  .onboarding-body { flex: 1; overflow-y: auto; padding: 0 28px; }
+  .onboarding-footer {
+    padding: 16px 28px 40px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .vibe-cloud {
+    display: flex; flex-wrap: wrap; gap: 10px;
+  }
+  .vibe-btn {
+    padding: 10px 16px; border-radius: 100px;
+    border: 1.5px solid var(--border2); background: var(--warm-white);
+    cursor: pointer; font-family: "DM Sans", sans-serif;
+    display: flex; align-items: center; gap: 8px;
+    transition: all 0.2s; font-size: 14px; font-weight: 600; color: var(--ink2);
+  }
+  .vibe-btn:hover { border-color: var(--gold-mid); background: var(--gold-light); }
+  .vibe-btn.active {
+    background: var(--gold-light); border-color: var(--gold);
+    color: var(--gold); transform: scale(1.04);
+  }
+  .vibe-emoji { font-size: 16px; }
+  .budget-list { display: flex; flex-direction: column; gap: 10px; }
+  .budget-btn {
+    padding: 16px; border-radius: 12px;
+    border: 1.5px solid var(--border2); background: var(--warm-white);
+    cursor: pointer; font-family: "DM Sans", sans-serif;
+    display: flex; align-items: center; gap: 14px; transition: all 0.15s;
+  }
+  .budget-btn.active { background: var(--gold-light); border-color: var(--gold); }
+  .budget-emoji { font-size: 24px; }
+  .budget-label { font-size: 14px; font-weight: 700; color: var(--ink); }
+  .budget-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .onboarding-input {
+    width: 100%; padding: 16px; border-radius: 12px;
+    border: 1.5px solid var(--border2); background: var(--warm-white);
+    font-family: "DM Sans", sans-serif; font-size: 14px; color: var(--ink);
+    outline: none; resize: none; line-height: 1.6;
+    transition: border-color 0.15s;
+  }
+  .onboarding-input:focus { border-color: var(--gold-mid); }
+  .onboarding-btn {
+    width: 100%; padding: 15px; border-radius: 12px; border: none;
+    font-family: "DM Sans", sans-serif; font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .onboarding-btn-primary { background: var(--ink); color: white; }
+  .onboarding-btn-primary:hover { background: var(--ink2); }
+  .onboarding-btn-skip {
+    background: none; color: var(--muted); font-size: 13px; font-weight: 500;
+    border: none; padding: 8px;
+  }
+
   /* Share modal */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(26,24,20,0.5);
@@ -513,6 +589,34 @@ function buildTasteProfile(history) {
   };
 }
 
+const VIBES = [
+  { emoji: "🏔️", label: "Outdoorsy" },
+  { emoji: "🏠", label: "Homebody" },
+  { emoji: "🍳", label: "Foodie" },
+  { emoji: "✈️", label: "Adventurer" },
+  { emoji: "🎨", label: "Creative" },
+  { emoji: "🧘", label: "Wellness" },
+  { emoji: "💻", label: "Tech nerd" },
+  { emoji: "📚", label: "Bookworm" },
+  { emoji: "🌿", label: "Eco-minded" },
+  { emoji: "🎵", label: "Music lover" },
+  { emoji: "🐾", label: "Pet parent" },
+  { emoji: "⚽", label: "Sports fan" },
+];
+
+const BUDGET_STYLES = [
+  { emoji: "🏷️", label: "Bargain hunter", sub: "I love a great deal" },
+  { emoji: "⚖️", label: "Sweet spot", sub: "Quality meets value" },
+  { emoji: "💎", label: "Quality first", sub: "Worth paying more" },
+];
+
+const ONBOARDING_STEPS = [
+  { id: "vibes", question: "What's your vibe?", sub: "Pick a few that feel like you", type: "vibes" },
+  { id: "budget", question: "How do you shop?", sub: "No wrong answers here", type: "budget" },
+  { id: "interests", question: "What are you into lately?", sub: "Anything goes — a hobby, an obsession, a phase", type: "text", placeholder: "e.g. sourdough baking, trail running, vintage cameras..." },
+  { id: "avoid", question: "Anything you never want to see?", sub: "Optional — skip if you're easy going", type: "text", placeholder: "e.g. fur products, fast fashion, anything over $200..." },
+];
+
 const DISCOVER_CHIPS = [
   "Outdoor & Gear", "Kitchen & Home", "Sustainable", "Handmade & Artisan",
   "Tech & Gadgets", "Fashion & Style", "Health & Wellness", "Books & Learning"
@@ -587,7 +691,19 @@ export default function App() {
   const [tab, setTab] = useState(isSharedView ? "store" : "discover");
   const [userHandle] = useState(getUserHandle);
   const [searchPlaceholder] = useState(() => getRandom(SEARCH_EXAMPLES));
-  const [priceFilter, setPriceFilter] = useState(null); // null | 50 | 150 | 300 | 999
+  const [priceFilter, setPriceFilter] = useState(null);
+
+  // Onboarding
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return !localStorage.getItem("trove_profile_done");
+  });
+  const [onboardingStep, setOnboardingStep] = useState(0);
+  const [profile, setProfile] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("trove_profile") || "{}"); } catch { return {}; }
+  });
+  const [onboardingAnswers, setOnboardingAnswers] = useState({
+    vibes: [], budget: null, interests: "", avoid: ""
+  }); // null | 50 | 150 | 300 | 999
   const [featuredStores] = useState(() => getRandom(STORE_EXAMPLES));
   const locale = getLocale();
   const [query, setQuery] = useState("");
@@ -649,7 +765,7 @@ export default function App() {
         body: JSON.stringify({
           query: q,
           chips: activeChips,
-          tasteProfile,
+          tasteProfile: { ...tasteProfile, profile },
           locale,
           priceFilter,
         })
@@ -683,7 +799,7 @@ export default function App() {
         body: JSON.stringify({
           discover: true,
           chips: activeChips,
-          tasteProfile,
+          tasteProfile: { ...tasteProfile, profile },
           locale,
           priceFilter,
         })
@@ -698,6 +814,19 @@ export default function App() {
       setLoading(false);
     }
   }, [activeChips, tasteProfile]);
+
+  const saveProfile = (answers) => {
+    const merged = { ...profile, ...answers, updatedAt: Date.now() };
+    setProfile(merged);
+    localStorage.setItem("trove_profile", JSON.stringify(merged));
+    localStorage.setItem("trove_profile_done", "1");
+    setShowOnboarding(false);
+  };
+
+  const skipOnboarding = () => {
+    localStorage.setItem("trove_profile_done", "1");
+    setShowOnboarding(false);
+  };
 
   const handleShareItem = (product) => {
     setShareItem(product);
@@ -947,6 +1076,48 @@ ${url}`;
                 <div className="section-title">Your taste profile</div>
               </div>
 
+              {/* Edit profile button */}
+              <button onClick={() => { setOnboardingStep(0); setShowOnboarding(true); }}
+                style={{
+                  display:"flex", alignItems:"center", gap:8,
+                  background:"var(--warm-white)", border:"1.5px solid var(--border2)",
+                  borderRadius:10, padding:"10px 16px", marginBottom:12,
+                  fontFamily:"DM Sans,sans-serif", fontSize:13, fontWeight:700,
+                  color:"var(--ink2)", cursor:"pointer", width:"100%"
+                }}>
+                ✏️ Edit my taste profile
+              </button>
+
+              {profile.vibes?.length > 0 && (
+                <div className="profile-card">
+                  <div className="profile-card-title">My vibes</div>
+                  <div className="taste-grid">
+                    {profile.vibes.map((v,i) => <div key={i} className="taste-pill active">{v}</div>)}
+                  </div>
+                </div>
+              )}
+
+              {profile.budget && (
+                <div className="profile-card">
+                  <div className="profile-card-title">Shopping style</div>
+                  <div style={{fontSize:14, fontWeight:600, color:"var(--ink)"}}>{profile.budget}</div>
+                </div>
+              )}
+
+              {profile.interests && (
+                <div className="profile-card">
+                  <div className="profile-card-title">Into lately</div>
+                  <div style={{fontSize:13, color:"var(--ink2)", lineHeight:1.6}}>{profile.interests}</div>
+                </div>
+              )}
+
+              {profile.avoid && (
+                <div className="profile-card">
+                  <div className="profile-card-title">Never show me</div>
+                  <div style={{fontSize:13, color:"var(--ink2)", lineHeight:1.6}}>{profile.avoid}</div>
+                </div>
+              )}
+
               <div className="profile-card">
                 <div className="profile-card-title">Stats</div>
                 {scanHistory.length === 0 ? (
@@ -1006,6 +1177,91 @@ ${url}`;
           )}
 
         </div>
+
+        {/* ONBOARDING */}
+        {showOnboarding && (() => {
+          const step = ONBOARDING_STEPS[onboardingStep];
+          const isLast = onboardingStep === ONBOARDING_STEPS.length - 1;
+          const canNext = step.type === "vibes" ? onboardingAnswers.vibes.length > 0
+            : step.type === "budget" ? !!onboardingAnswers.budget
+            : true;
+
+          const handleNext = () => {
+            if (isLast) {
+              saveProfile(onboardingAnswers);
+            } else {
+              setOnboardingStep(s => s + 1);
+            }
+          };
+
+          return (
+            <div className="onboarding-overlay">
+              <div className="onboarding-header">
+                <div className="onboarding-progress">
+                  {ONBOARDING_STEPS.map((_, i) => (
+                    <div key={i} className={`onboarding-progress-dot ${i <= onboardingStep ? "done" : ""}`} />
+                  ))}
+                </div>
+                <div className="onboarding-question">{step.question}</div>
+                <div className="onboarding-sub">{step.sub}</div>
+              </div>
+
+              <div className="onboarding-body">
+                {step.type === "vibes" && (
+                  <div className="vibe-cloud">
+                    {VIBES.map(v => (
+                      <button key={v.label}
+                        className={`vibe-btn ${onboardingAnswers.vibes.includes(v.label) ? "active" : ""}`}
+                        onClick={() => setOnboardingAnswers(a => ({
+                          ...a,
+                          vibes: a.vibes.includes(v.label)
+                            ? a.vibes.filter(x => x !== v.label)
+                            : [...a.vibes, v.label]
+                        }))}>
+                        <span className="vibe-emoji">{v.emoji}</span>
+                        {v.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {step.type === "budget" && (
+                  <div className="budget-list">
+                    {BUDGET_STYLES.map(b => (
+                      <button key={b.label}
+                        className={`budget-btn ${onboardingAnswers.budget === b.label ? "active" : ""}`}
+                        onClick={() => setOnboardingAnswers(a => ({ ...a, budget: b.label }))}>
+                        <span className="budget-emoji">{b.emoji}</span>
+                        <div>
+                          <div className="budget-label">{b.label}</div>
+                          <div className="budget-sub">{b.sub}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {step.type === "text" && (
+                  <textarea className="onboarding-input" rows={4}
+                    placeholder={step.placeholder}
+                    value={onboardingAnswers[step.id] || ""}
+                    onChange={e => setOnboardingAnswers(a => ({ ...a, [step.id]: e.target.value }))}
+                  />
+                )}
+              </div>
+
+              <div className="onboarding-footer">
+                <button className="onboarding-btn onboarding-btn-primary"
+                  onClick={handleNext} disabled={!canNext && step.type !== "text"}>
+                  {isLast ? "✦ Start discovering" : "Continue →"}
+                </button>
+                <button className="onboarding-btn onboarding-btn-skip" onClick={skipOnboarding}>
+                  {onboardingStep === 0 ? "Skip — just show me Trove" : "Skip this question"}
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* SHARE ITEM MODAL */}
         {shareItem && (
