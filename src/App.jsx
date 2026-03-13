@@ -238,6 +238,26 @@ const styles = `
   .taste-chip:hover { border-color: var(--gold-mid); color: var(--gold); }
   .taste-chip.active { background: var(--gold-light); border-color: var(--gold-mid); color: var(--gold); }
 
+  .price-filter-row {
+    display: flex; gap: 6px; padding: 10px 20px 0; overflow-x: auto; scrollbar-width: none;
+  }
+  .price-filter-row::-webkit-scrollbar { display: none; }
+  .price-chip {
+    white-space: nowrap; padding: 5px 12px; border-radius: 100px;
+    border: 1.5px solid var(--border2); background: var(--warm-white);
+    font-size: 12px; font-weight: 700; color: var(--ink2);
+    cursor: pointer; transition: all 0.15s; font-family: "DM Sans", sans-serif;
+  }
+  .price-chip:hover { border-color: var(--gold-mid); }
+  .price-chip.active { background: var(--gold-light); border-color: var(--gold); color: var(--gold); }
+
+  .rating-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px; font-weight: 700; color: var(--gold);
+    background: var(--gold-light); border: 1px solid var(--gold-mid);
+    border-radius: 100px; padding: 2px 8px; margin-left: 6px;
+  }
+
   /* ── SECTION HEADER ── */
   .section-header {
     display: flex; align-items: baseline; justify-content: space-between;
@@ -507,6 +527,11 @@ function ProductCard({ product, isSaved, onSave, onShare, index }) {
           <div className="product-store">
             <div className="store-dot" />
             {product.store}
+            {product.rating && (
+              <span className="rating-badge">
+                ★ {product.rating}
+              </span>
+            )}
           </div>
           {product.matchReason && (
             <div className="product-match">✦ Great match</div>
@@ -562,6 +587,7 @@ export default function App() {
   const [tab, setTab] = useState(isSharedView ? "store" : "discover");
   const [userHandle] = useState(getUserHandle);
   const [searchPlaceholder] = useState(() => getRandom(SEARCH_EXAMPLES));
+  const [priceFilter, setPriceFilter] = useState(null); // null | 50 | 150 | 300 | 999
   const [featuredStores] = useState(() => getRandom(STORE_EXAMPLES));
   const locale = getLocale();
   const [query, setQuery] = useState("");
@@ -625,6 +651,7 @@ export default function App() {
           chips: activeChips,
           tasteProfile,
           locale,
+          priceFilter,
         })
       });
       const data = await res.json();
@@ -658,6 +685,7 @@ export default function App() {
           chips: activeChips,
           tasteProfile,
           locale,
+          priceFilter,
         })
       });
       const data = await res.json();
@@ -769,6 +797,23 @@ ${url}`;
               </div>
 
               {/* Discover button */}
+              {/* Price filter */}
+              <div className="price-filter-row">
+                <span style={{fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:1, color:"var(--muted)", display:"flex", alignItems:"center", paddingRight:4}}>Budget</span>
+                {[
+                  { label: "Under $50", val: 50 },
+                  { label: "$50–$150", val: 150 },
+                  { label: "$150–$300", val: 300 },
+                  { label: "$300+", val: 999 },
+                ].map(({ label, val }) => (
+                  <button key={val}
+                    className={`price-chip ${priceFilter === val ? "active" : ""}`}
+                    onClick={() => setPriceFilter(p => p === val ? null : val)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
               {!loading && products.length === 0 && !error && (
                 <div className="empty-section">
                   <div className="empty-icon">✦</div>
