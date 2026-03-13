@@ -1,7 +1,36 @@
-
 import { useState, useCallback, useEffect, useRef } from "react";
 
 const API_URL = "/api/trove";
+
+function getLocale() {
+  const lang = navigator.language || "en-CA";
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  // Map timezone to country + currency
+  const map = {
+    "America/Toronto":"CA","America/Vancouver":"CA","America/Edmonton":"CA",
+    "America/Winnipeg":"CA","America/Halifax":"CA","America/St_Johns":"CA",
+    "America/New_York":"US","America/Chicago":"US","America/Denver":"US",
+    "America/Los_Angeles":"US","America/Phoenix":"US","America/Anchorage":"US",
+    "Europe/London":"GB","Europe/Paris":"FR","Europe/Berlin":"DE",
+    "Europe/Amsterdam":"NL","Europe/Madrid":"ES","Europe/Rome":"IT",
+    "Australia/Sydney":"AU","Australia/Melbourne":"AU","Australia/Perth":"AU",
+    "Pacific/Auckland":"NZ","Asia/Tokyo":"JP","Asia/Seoul":"KR",
+    "Asia/Singapore":"SG","Asia/Hong_Kong":"HK",
+  };
+  const currencyMap = {
+    "CA":"CAD","US":"USD","GB":"GBP","FR":"EUR","DE":"EUR","NL":"EUR",
+    "ES":"EUR","IT":"EUR","AU":"AUD","NZ":"NZD","JP":"JPY","KR":"KRW",
+    "SG":"SGD","HK":"HKD",
+  };
+  const countryCode = map[tz] || (lang.includes("-") ? lang.split("-")[1] : "CA");
+  const currency = currencyMap[countryCode] || "CAD";
+  const countryNames = {
+    "CA":"Canada","US":"United States","GB":"United Kingdom","FR":"France",
+    "DE":"Germany","AU":"Australia","NZ":"New Zealand","JP":"Japan",
+    "KR":"South Korea","SG":"Singapore","NL":"Netherlands","ES":"Spain","IT":"Italy",
+  };
+  return { countryCode, currency, country: countryNames[countryCode] || "Canada", tz };
+}
 
 const styles = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -398,6 +427,7 @@ function ProductCard({ product, isSaved, onSave, index }) {
 // ── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [tab, setTab] = useState("discover");
+  const locale = getLocale();
   const [query, setQuery] = useState("");
   const [activeChips, setActiveChips] = useState([]);
   const [products, setProducts] = useState([]);
@@ -456,6 +486,7 @@ export default function App() {
           query: q,
           chips: activeChips,
           tasteProfile,
+          locale,
         })
       });
       const data = await res.json();
@@ -488,6 +519,7 @@ export default function App() {
           discover: true,
           chips: activeChips,
           tasteProfile,
+          locale,
         })
       });
       const data = await res.json();
@@ -539,8 +571,8 @@ export default function App() {
                 </div>
                 <div className="discover-sub">
                   {tasteProfile?.scanCount > 0
-                    ? `Based on ${tasteProfile.scanCount} scans and your taste profile`
-                    : "Search across Etsy, REI, Patagonia, kitchen stores and more"}
+                    ? `Based on ${tasteProfile.scanCount} scans · Shopping in ${locale.country}`
+                    : `Shopping in ${locale.country} · Etsy, REI, Patagonia, kitchen stores and more`}
                 </div>
                 <div className="search-row">
                   <div className="search-box">
