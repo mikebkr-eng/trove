@@ -31,7 +31,9 @@ Search specifically for this product. Look across these stores: ${stores} — an
 ${categoryContext} ${profileContext}
 Find 4-5 specific real products with real prices in ${currency}. If mainstream stores don't carry it, look at specialty retailers, direct brand websites, or Etsy. Always return results even for niche products.`;
 
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
+    let r;
+    try {
+      r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -66,9 +68,17 @@ Include 4-5 products. Use real direct URLs. If you can't find a specific product
           }
         ]
       })
-    });
+      });
+    } catch (fetchErr) {
+      return res.status(502).json({ error: "Could not reach search service. Please try again." });
+    }
 
-    const d = await r.json();
+    let d;
+    const rawText = await r.text();
+    try { d = JSON.parse(rawText); } catch {
+      console.error("Anthropic raw response:", rawText.slice(0, 200));
+      return res.status(502).json({ error: "Service error — please try again in a moment." });
+    }
     if (!r.ok) return res.status(502).json({ error: "Search failed — " + (d?.error?.message || "please try again") });
 
     const text = d.content?.filter(b => b.type === "text").map(b => b.text).join("") || "";
