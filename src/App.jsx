@@ -423,6 +423,26 @@ const styles = `
     padding: 12px 0;
   }
 
+  /* Onboarding prompt */
+  .onboarding-prompt {
+    position: fixed; inset: 0; background: rgba(26,24,20,0.4);
+    z-index: 250; display: flex; align-items: flex-end; justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+  .onboarding-prompt-sheet {
+    background: var(--warm-white); border-radius: 20px 20px 0 0;
+    padding: 8px 24px 40px; width: 100%; max-width: 430px;
+    animation: slideUp 0.25s ease;
+  }
+  .onboarding-prompt-icon { font-size: 36px; margin: 16px 0 10px; }
+  .onboarding-prompt-title {
+    font-family: "Playfair Display", serif;
+    font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 8px;
+  }
+  .onboarding-prompt-sub {
+    font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 20px;
+  }
+
   /* Onboarding */
   .onboarding-overlay {
     position: fixed; inset: 0; background: var(--cream);
@@ -692,11 +712,13 @@ export default function App() {
   const [userHandle] = useState(getUserHandle);
   const [searchPlaceholder] = useState(() => getRandom(SEARCH_EXAMPLES));
   const [priceFilter, setPriceFilter] = useState(null);
+  const [discoverAngle, setDiscoverAngle] = useState(null);
 
   // Onboarding
-  const [showOnboarding, setShowOnboarding] = useState(() => {
+  const [showOnboardingPrompt, setShowOnboardingPrompt] = useState(() => {
     return !localStorage.getItem("trove_profile_done");
   });
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [profile, setProfile] = useState(() => {
     try { return JSON.parse(localStorage.getItem("trove_profile") || "{}"); } catch { return {}; }
@@ -752,6 +774,7 @@ export default function App() {
     setLoading(true);
     setError(null);
     setProducts([]);
+    setDiscoverAngle(null);
 
     const msgs = ["Searching across stores...", "Finding the best matches...", "Almost there..."];
     let mi = 0;
@@ -786,6 +809,7 @@ export default function App() {
     setError(null);
     setProducts([]);
     setQuery("");
+    setDiscoverAngle(null);
 
     const msgs = ["Studying your taste...", "Discovering hidden gems...", "Curating just for you..."];
     let mi = 0;
@@ -806,7 +830,8 @@ export default function App() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Discovery failed");
-      setProducts(data.products || []);
+            setProducts(data.products || []);
+      if (data.angle) setDiscoverAngle(data.angle);
     } catch(e) {
       setError(e.message);
     } finally {
@@ -821,11 +846,14 @@ export default function App() {
     localStorage.setItem("trove_profile", JSON.stringify(merged));
     localStorage.setItem("trove_profile_done", "1");
     setShowOnboarding(false);
+    setShowOnboardingPrompt(false);
   };
 
   const skipOnboarding = () => {
     localStorage.setItem("trove_profile_done", "1");
     setShowOnboarding(false);
+    setShowOnboardingPrompt(false);
+    setShowOnboardingPrompt(false);
   };
 
   const handleShareItem = (product) => {
@@ -954,7 +982,7 @@ ${url}`;
                   </div>
                   <button className="search-btn" style={{marginTop:16, padding:"13px 28px", fontSize:14, borderRadius:12}}
                     onClick={handleDiscover} disabled={loading}>
-                    ✦ Discover for me
+                    ✦ Find something I'll love
                   </button>
                 </div>
               )}
@@ -962,7 +990,15 @@ ${url}`;
                 <div className="empty-section">
                   <div className="empty-icon">🔍</div>
                   <div className="empty-title">Nothing found</div>
-                  <div className="empty-sub">{error}<br/><br/>Try a slightly broader term — e.g. "crampons" instead of "ice climbing crampons".</div>
+                  <div className="empty-sub">
+                    {error}
+                    {query && <><br/><br/>Try a slightly broader term — e.g. "crampons" instead of "ice climbing crampons".</>}
+                    {!query && <><br/><br/>Try selecting a category above or searching for something specific.</>}
+                  </div>
+                  <button className="search-btn" style={{marginTop:16, padding:"12px 24px", borderRadius:12, fontSize:13}}
+                    onClick={() => query ? handleSearch() : handleDiscover()}>
+                    Try again
+                  </button>
                 </div>
               )}
 
@@ -979,8 +1015,15 @@ ${url}`;
               {!loading && products.length > 0 && (
                 <>
                   <div className="section-header">
-                    <div className="section-title">
-                      {query ? `Results for "${query}"` : "Picked for you"}
+                    <div>
+                      <div className="section-title">
+                        {query ? `Results for "${query}"` : "Picked for you"}
+                      </div>
+                      {!query && discoverAngle && (
+                        <div style={{fontSize:12, color:"var(--muted)", marginTop:3, fontStyle:"italic"}}>
+                          {discoverAngle}
+                        </div>
+                      )}
                     </div>
                     <div className="section-sub">{products.length} finds</div>
                   </div>
@@ -993,7 +1036,7 @@ ${url}`;
                   <div style={{padding:"20px", textAlign:"center"}}>
                     <button className="search-btn" style={{borderRadius:12, padding:"12px 24px"}}
                       onClick={() => query ? handleSearch() : handleDiscover()} disabled={loading}>
-                      ↻ Refresh picks
+                      ↻ Find something else
                     </button>
                   </div>
                 </>
@@ -1077,7 +1120,7 @@ ${url}`;
               </div>
 
               {/* Edit profile button */}
-              <button onClick={() => { setOnboardingStep(0); setShowOnboarding(true); }}
+              <button onClick={() => { setOnboardingStep(0); setShowOnboarding(true); setShowOnboardingPrompt(false); }}
                 style={{
                   display:"flex", alignItems:"center", gap:8,
                   background:"var(--warm-white)", border:"1.5px solid var(--border2)",
@@ -1177,6 +1220,27 @@ ${url}`;
           )}
 
         </div>
+
+        {/* ONBOARDING PROMPT */}
+        {showOnboardingPrompt && !showOnboarding && (
+          <div className="onboarding-prompt" onClick={() => setShowOnboardingPrompt(false)}>
+            <div className="onboarding-prompt-sheet" onClick={e => e.stopPropagation()}>
+              <div className="modal-handle" style={{margin:"12px auto 16px"}} />
+              <div className="onboarding-prompt-icon">✦</div>
+              <div className="onboarding-prompt-title">Get picks made for you</div>
+              <div className="onboarding-prompt-sub">
+                Answer 4 quick questions and Trove will find things you'll actually love — not just popular items. Takes under a minute.
+              </div>
+              <button className="onboarding-btn onboarding-btn-primary" style={{marginBottom:10}}
+                onClick={() => { setShowOnboardingPrompt(false); setShowOnboarding(true); }}>
+                ✦ Personalise my Trove
+              </button>
+              <button className="onboarding-btn onboarding-btn-skip" onClick={skipOnboarding}>
+                No thanks, I'll just search
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ONBOARDING */}
         {showOnboarding && (() => {
